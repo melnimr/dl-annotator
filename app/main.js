@@ -53,18 +53,24 @@ const readAudioFile = exports.readAudioFile = () => {
             throw 'no file selected';
         }
     })
-    .then(path => ({path: path, fileContents: fs.readFileSync(path)}))
-    .then(obj => {
-        let filename, extension;
-        [filename, extension] = obj.path.split('\\').pop().split('.')
-        return {
-            filename: filename,
-            dataURI: dataurl.convert({data: obj.fileContents, mimetype: `audio/${extension}`})
-        }
-    })
+    .then(path2filenameAndDataURI)
     .then(obj => mainWindow.webContents.send('file-opened', obj))
     .catch(()=> 'nothing to see here') // not doing anything on error, what is to be done here?!
 };
+
+const readAudioFileFromPath = exports.readAudioFileFromPath = (filePath) => {
+    let obj = path2filenameAndDataURI(filePath);
+    mainWindow.webContents.send('file-opened', obj)
+}
+
+const path2filenameAndDataURI = (path) => {
+    let fileContents = fs.readFileSync(path);
+    let [filename, extension] = path.split('\\').pop().split('.');
+    return {
+        filename: filename,
+        dataURI: dataurl.convert({data: fileContents, mimetype: `audio/${extension}`})
+    }
+}
 
 const getAnnoOutputDir = exports.getAnnoOutputDir = () => {
     dialog.showOpenDialog(mainWindow, {
